@@ -13,6 +13,9 @@ RUN pip install -r requirements.txt
 # Copy the rest of the code
 COPY . .
 
+# Set environment variables (replace with your actual connection strings)
+ENV POSTGRESQL_DB_STRING="postgresql://postgres:brkbkeo.97@localhost:8050/postgres"
+
 # Expose the port
 EXPOSE 8051
 

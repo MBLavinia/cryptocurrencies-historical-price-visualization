@@ -4,17 +4,10 @@ from flask import Flask
 from dash import Dash, dcc, html, Input, Output, State, dash_table, callback_context, ALL
 import dash_bootstrap_components as dbc
 import plotly.express as px
-from pymongo import MongoClient
-from datetime import datetime
 
 # Database connection string
 db_string = "postgresql://postgres:brkbeko.97@localhost:8050/postgres"
 engine = create_engine(db_string)
-
-# MongoDB connection string
-mongo_client = MongoClient("mongodb://localhost:27017/")
-mongo_db = mongo_client['crypto_dashboard']
-mongo_collection = mongo_db['date_range_selections']
 
 # Flask server
 server = Flask(__name__)
@@ -64,7 +57,6 @@ app.layout = dbc.Container([
                     {'name': 'Change %', 'id': 'change_percent'},
                 ],
                 sort_action="native",
-                sort_by=[{'column_id': 'date', 'direction': 'desc'}],
                 page_size=10,
             )),
             dbc.ModalFooter(
@@ -84,14 +76,6 @@ app.layout = dbc.Container([
     Input('date-picker-range', 'end_date')
 )
 def update_output(start_date, end_date):
-    # Log date range selection in MongoDB
-    log_entry = {
-        "BeginDate": start_date,
-        "EndDate": end_date,
-        "RequestDate": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    mongo_collection.insert_one(log_entry)
-
     # Query the data
     query = f"""
     SELECT date, pair, price, open, high, low, volume, change_percent 
@@ -169,9 +153,6 @@ def display_data_in_modal(card_clicks, close_click, is_open, start_date, end_dat
     """
     df = pd.read_sql(query, engine)
     df['date'] = pd.to_datetime(df['date'])  # Ensure date column is datetime
-
-    # Sort data by date in descending order
-    df.sort_values(by='date', ascending=False, inplace=True)
 
     data = df.to_dict('records')
 
